@@ -13,7 +13,7 @@ const image = require('./controllers/image');
 const db = knex({
   client: 'postgres',
   connection: {
-    host : '127.0.0.1',
+    host : 'postgresql-adjacent-86132',
     user : 'eggroll',
     password : '',
     database : 'SmartScanner'
