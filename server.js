@@ -1,42 +1,57 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const bcrypt = require('bcrypt-nodejs');
-const cors = require('cors');
-const knex = require('knex');
-const cors = require('cors');
+import express from "express";
+import bcrypt from "bcryptjs";
+import cors from "cors";
+import knex from "knex";
 
-app.use(cors())
-
-
-const register = require('./controllers/register');
-const signin = require('./controllers/signin');
-const profile = require('./controllers/profile');
-const image = require('./controllers/image');
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
+// -- endpoint function from controller
+import handleRegister from "./controller/handleRegister.js";
+import handleSignin from "./controller/handleSignin.js";
+import handleProfile from "./controller/handleProfile.js";
+import handleImage from "./controller/handleImage.js";
+import handleClarifaiAPI from "./controller/handleClarifaiAPI.js";
 
 const db = knex({
- const db = knex({
-  client: 'pg',
+  client: "pg",
   connection: {
     connectionString: process.env.DATABASE_URL,
     ssl: {
-      rejectUnauthorized: false
-    }
-  }
+      rejectUnauthorized: false,
+    },
+  },
 });
+
+// setup custom port
+const PORT = process.env.PORT || 3000;
 
 const app = express();
 
-app.use(cors())
-app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
+app.use(cors());
 
-app.get("/", (req, res) => {res.send("it's working!") })
-app.post('/signin', signin.handleSignin(db, bcrypt))
-app.post('/register', (req, res) => { register.handleRegister(req, res, db, bcrypt) })
-app.get('/profile/:id', (req, res) => { profile.handleProfileGet(req, res, db)})
-app.put('/image', (req, res) => { image.handleImage(req, res, db)})
-app.post('/imageurl', (req, res) => { image.handleApiCall(req, res)})
+app.get("/", (req, res) => res.send("this is working"));
 
-app.listen(process.env.PORT || 3000, () => {
-console.log(`app is running on port ${process.env.PORT}`);
+// Sign In POST
+app.post("/signin", (req, res) => handleSignin(req, res, db, bcrypt));
+
+// Register POST
+app.post("/register", (req, res) => handleRegister(req, res, db, bcrypt));
+
+// --Profile GET--
+app.get("/profile/:id", (req, res) => handleProfile(req, res, db));
+
+// -- image entries PUT --
+app.put("/image", (req, res) => handleImage(req, res, db));
+
+// --Clarifai API call
+app.post("/imageURL", (req, res) => handleClarifaiAPI(req, res));
+
+app.listen(PORT, () => {
+  console.log(`app is running at port ${PORT}`);
 });
+
+//   / --> res = this is working
+//   /signin --> POST = success/fail
+//   /register --> POST = user(obj)
+//   /profile/:userID --> GET = user(obj)
+//   /image  --> PUT --> user rank
